@@ -18,9 +18,11 @@ spring.datasource.password=123456
 
 2. Run JAR:
 
-Run: `java -jar prscraper-1.0.0.jar`
+`java -jar prscraper-1.0.0.jar`
 
-With custom path to properties file: `java -jar prscraper-1.0.0.jar --spring.config.location=<path to application.properties>`
+With custom path to properties file:
+
+`java -jar prscraper-1.0.0.jar --spring.config.location=<path to application.properties>`
 
 ## Database Schema
 The schema will be generated automatically for you.
