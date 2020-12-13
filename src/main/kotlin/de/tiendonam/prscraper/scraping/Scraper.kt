@@ -55,6 +55,8 @@ class Scraper (
             fetchFiles()
             setStage(StageValue.DONE)
         }
+
+        logger.info("Done.")
     }
 
     /**
