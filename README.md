@@ -4,7 +4,7 @@ Get useful information about pull requests of a repository
 ## Getting Started
 
 Using JAR:
-1. Add properties file:
+1. Add `application.properties` file next to the jar:
 ```
 # scraping config
 scraping.repository=elastic/elasticsearch
@@ -18,9 +18,9 @@ spring.datasource.password=123456
 
 2. Run JAR:
 
-`java -jar prscraper-1.0.0.jar --spring.config.location=<path to application.properties>`
+Run: `java -jar prscraper-1.0.0.jar`
 
-Example: `java -jar prscraper-1.0.0.jar --spring.config.location=application.properties`
+With custom path to properties file: `java -jar prscraper-1.0.0.jar --spring.config.location=<path to application.properties>`
 
 ## Database Schema
 The schema will be generated automatically for you.
