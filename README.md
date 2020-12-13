@@ -34,7 +34,7 @@ gh_number|BIGINT|NO|github id uniquely accross issues and pull requests
 title|TEXT|NO|pull request title
 state|VARCHAR|NO|can be `open` or `closed`
 author|TEXT|NO|author's github nickname
-created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
+created_at|TIMESTAMPZ|NO|pull request creation timestamp
 
 **commit**
 
@@ -47,7 +47,7 @@ hash|VARCHAR|NO|git hash (sha)
 hash_parent|VARCHAR|YES|git hash of parent commit (sha)
 tree|VARCHAR|NO|hash of git tree of commit
 author|TEXT|NO|author's github nickname
-created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
+created_at|TIMESTAMPZ|NO|commit creation timestamp
 
 **comment**
 
@@ -63,7 +63,7 @@ commit_fallback_id|BIGINT|YES|foreign key referencing the last commit of PR
 hunk_diff|TEXT|YES|referenced hunk diff
 hunk_file|TEXT|YES|file path of hunk diff
 author|TEXT|NO|author's github nickname
-created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
+created_at|TIMESTAMPZ|NO|comment creation timestamp
 
 **git_file**
 
