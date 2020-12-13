@@ -26,6 +26,7 @@ Example: `java -jar prscraper-1.0.0.jar --spring.config.location=application.pro
 The schema will be generated automatically for you.
 
 **pull_request**
+
 column|type|nullable|description
 ---|---|---|---
 id|BIGINT|NO|postgres id
@@ -36,6 +37,7 @@ author|TEXT|NO|author's github nickname
 created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
 
 **commit**
+
 column|type|nullable|description
 ---|---|---|---
 id|BIGINT|NO|postgres id
@@ -48,6 +50,7 @@ author|TEXT|NO|author's github nickname
 created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
 
 **comment**
+
 column|type|nullable|description
 ---|---|---|---
 id|BIGINT|NO|postgres id
@@ -63,20 +66,22 @@ author|TEXT|NO|author's github nickname
 created_at|TIMESTAMPZ|NO|timestamp of creation of the pull request
 
 **git_file**
+
 column|type|nullable|description
 ---|---|---|---
 id|BIGINT|NO|postgres id
 file_path|TEXT|NO|file path
 file_content|TEXT|NO|file content
-commit_id|BIGINT|YES|foreign key referencing the corresponding commit
+commit_id|BIGINT|NO|foreign key referencing the corresponding commit
 
 **scraping_status**
+
 column|type|nullable|description
 ---|---|---|---
 key|VARCHAR|NO|status key
 value|VARCHAR|NO|status value
 
-Possible entries for `scraping_status`:
+Possible entries for **scraping_status**:
 
 key|value|description
 ---|---|---
