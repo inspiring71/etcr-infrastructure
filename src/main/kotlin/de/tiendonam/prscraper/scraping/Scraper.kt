@@ -3,10 +3,13 @@ package de.tiendonam.prscraper.scraping
 import de.tiendonam.prscraper.database.*
 import de.tiendonam.prscraper.utils.RestClient
 import de.tiendonam.prscraper.utils.parseJSON
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import java.io.FileWriter
 import java.lang.RuntimeException
 import java.time.OffsetDateTime
 import javax.annotation.PostConstruct
@@ -21,7 +24,10 @@ class Scraper (
         private val scrapingStatusRepo: ScrapingStatusRepo,
 
         @Value("\${scraping.repository}")
-        private val repository: String
+        private val repository: String,
+
+        @Value("\${scraping.export.classified}")
+        private val exportClassified: Boolean
 ) {
 
     private val logger = LoggerFactory.getLogger(Scraper::class.java)
@@ -54,6 +60,24 @@ class Scraper (
             logger.info("Stage (4/4): files")
             fetchFiles()
             setStage(StageValue.DONE)
+        }
+
+        if (exportClassified) {
+            // export classified comments
+            val file = FileWriter("data-classified.csv")
+            val printer = CSVPrinter(file, CSVFormat.DEFAULT)
+
+            commentRepo
+                .findByClassTopicNotNull()
+                .forEach { comment ->
+                    val message = comment.message
+                        .replace(Regex("(\\r|\\n)"), " ")
+                        .trim()
+                        .toLowerCase()
+                    printer.printRecord(message, comment.classTopic, comment.note)
+                }
+            printer.close()
+            logger.info("Written result to csv.")
         }
 
         logger.info("Done.")

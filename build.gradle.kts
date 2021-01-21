@@ -23,6 +23,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	runtimeOnly("org.postgresql:postgresql")
+
+	implementation("org.apache.commons:commons-csv:1.4")
 }
 
 tasks.withType<KotlinCompile> {
