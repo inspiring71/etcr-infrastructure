@@ -12,9 +12,8 @@ enum class Topic {
         PROBLEM_CODE_STYLE, // e.g. brackets, indentation, naming
         PROBLEM_TEST, // e.g. missing test
         PROBLEM_COMPLEXITY, // e.g unnecessary import, statement
-        PROBLEM_STRUCTURE,
-        PROBLEM_ALGORITHM,
-        PROBLEM_BUG,
+        PROBLEM_STRUCTURE, // e.g. class hierarchy, method extraction
+        PROBLEM_BUG, // e.g. wrong variable, code is not working
         PROBLEM_DOCUMENTATION, // e.g. comments, javadoc
         PROBLEM_TYPO,
         REQUEST_CHANGE, // need changes without further categorization
