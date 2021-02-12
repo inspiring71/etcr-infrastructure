@@ -1,15 +1,13 @@
 package de.tiendonam.prscraper.scraping
 
 import de.tiendonam.prscraper.database.*
+import de.tiendonam.prscraper.utils.CsvUtils
 import de.tiendonam.prscraper.utils.RestClient
 import de.tiendonam.prscraper.utils.parseJSON
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import java.io.FileWriter
 import java.lang.RuntimeException
 import java.time.OffsetDateTime
 import javax.annotation.PostConstruct
@@ -20,6 +18,7 @@ class Scraper (
         private val pullRequestRepo: PullRequestRepo,
         private val commitRepo: CommitRepo,
         private val commentRepo: CommentRepo,
+        private val commentStreamService: CommentStreamService,
         private val gitFileRepo: GitFileRepo,
         private val scrapingStatusRepo: ScrapingStatusRepo,
 
@@ -27,7 +26,10 @@ class Scraper (
         private val repository: String,
 
         @Value("\${scraping.export.classified}")
-        private val exportClassified: Boolean
+        private val exportClassified: Boolean,
+
+        @Value("\${scraping.export.all}")
+        private val exportAll: Boolean
 ) {
 
     private val logger = LoggerFactory.getLogger(Scraper::class.java)
@@ -64,20 +66,40 @@ class Scraper (
 
         if (exportClassified) {
             // export classified comments
-            val file = FileWriter("data-classified.csv")
-            val printer = CSVPrinter(file, CSVFormat.DEFAULT)
+            CsvUtils.writeFile("dataset_classified.csv") { printer ->
+                commentRepo
+                    .findByClassTopicNotNull()
+                    .forEach { comment ->
+                        val message = comment.message
+                            .replace(Regex("(\\r|\\n)"), " ")
+                            .trim()
+                            .toLowerCase()
+                        printer.printRecord(comment.id, message, comment.classTopic, comment.note)
+                    }
+            }
+            logger.info("Written classified results to csv.")
+        }
 
-            commentRepo
-                .findByClassTopicNotNull()
-                .forEach { comment ->
+        if (exportAll) {
+            // export all comments
+            var counter = 0
+            CsvUtils.writeFile("dataset_all.csv") { printer ->
+                commentStreamService.doLineByLine { comment ->
+
+                    counter++
+                    if (counter % 10000 == 0) {
+                        logger.info("All comments: $counter")
+                    }
+
                     val message = comment.message
                         .replace(Regex("(\\r|\\n)"), " ")
                         .trim()
                         .toLowerCase()
-                    printer.printRecord(message, comment.classTopic, comment.note)
+
+                    printer.printRecord(comment.id, message, comment.classTopic, comment.note)
                 }
-            printer.close()
-            logger.info("Written result to csv.")
+            }
+            logger.info("Written all results to csv.")
         }
 
         logger.info("Done.")

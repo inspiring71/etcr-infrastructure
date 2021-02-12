@@ -4,7 +4,10 @@ import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
+import java.util.stream.Stream
 import javax.persistence.*
 
 enum class Topic {
@@ -65,6 +68,20 @@ data class Comment (
 @Repository
 interface CommentRepo : CrudRepository<Comment, Long> {
 
+        fun findByOrderById(): Stream<Comment>
         fun findByCommitOrCommitFallback(commit: Commit, commitFallback: Commit): List<Comment>
         fun findByClassTopicNotNull(): List<Comment>
+}
+
+@Service
+class CommentStreamService (val commentRepo: CommentRepo) {
+
+    @Transactional(readOnly = true)
+    fun doLineByLine(action: (Comment) -> Unit) {
+        commentRepo.findByOrderById().use { stream ->
+            stream.forEach { comment ->
+                action(comment)
+            }
+        }
+    }
 }
