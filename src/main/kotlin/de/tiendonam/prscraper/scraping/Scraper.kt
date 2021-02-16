@@ -2,6 +2,7 @@ package de.tiendonam.prscraper.scraping
 
 import de.tiendonam.prscraper.database.*
 import de.tiendonam.prscraper.utils.CsvUtils
+import de.tiendonam.prscraper.utils.ExportUtils
 import de.tiendonam.prscraper.utils.RestClient
 import de.tiendonam.prscraper.utils.parseJSON
 import org.slf4j.LoggerFactory
@@ -70,11 +71,8 @@ class Scraper (
                 commentRepo
                     .findByClassTopicNotNull()
                     .forEach { comment ->
-                        val message = comment.message
-                            .replace(Regex("(\\r|\\n)"), " ")
-                            .trim()
-                            .toLowerCase()
-                        printer.printRecord(comment.id, message, comment.classTopic, comment.note)
+                        if (ExportUtils.filter(comment.message))
+                            printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
                     }
             }
             logger.info("Written classified results to csv.")
@@ -91,12 +89,8 @@ class Scraper (
                         logger.info("All comments: $counter")
                     }
 
-                    val message = comment.message
-                        .replace(Regex("(\\r|\\n)"), " ")
-                        .trim()
-                        .toLowerCase()
-
-                    printer.printRecord(comment.id, message, comment.classTopic, comment.note)
+                    if (ExportUtils.filter(comment.message))
+                        printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
                 }
             }
             logger.info("Written all results to csv.")
@@ -288,7 +282,7 @@ class Scraper (
     /**
      * save stage to database and returns its value
      */
-    fun setStage(stage: StageValue): StageValue {
+    private fun setStage(stage: StageValue): StageValue {
         scrapingStatusRepo.save(ScrapingStatus(StatusKey.STAGE.name, stage.name))
         return stage
     }

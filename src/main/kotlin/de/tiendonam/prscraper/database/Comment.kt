@@ -12,14 +12,12 @@ import javax.persistence.*
 
 enum class Topic {
         LGTM, // looks good to me
-        PROBLEM_CODE_STYLE, // e.g. brackets, indentation, naming
+        PROBLEM_CODE_STYLE, // e.g. brackets, indentation, naming, method extraction
         PROBLEM_TEST, // e.g. missing test
-        PROBLEM_COMPLEXITY, // e.g unnecessary import, statement
-        PROBLEM_STRUCTURE, // e.g. class hierarchy, method extraction
         PROBLEM_BUG, // e.g. wrong variable, code is not working
         PROBLEM_DOCUMENTATION, // e.g. comments, javadoc
         PROBLEM_TYPO,
-        REQUEST_CHANGE, // need changes without further categorization
+        PROBLEM_GENERAL, // need changes without further categorization
         QUESTION
 }
 
