@@ -1,5 +1,7 @@
-/dataset_all.csv
-/dataset_classified.csv
+/dataset.csv
+/dataset_digested.csv
+/dataset_labeled.csv
+/dataset_labeled_digested.csv
 
 HELP.md
 .gradle

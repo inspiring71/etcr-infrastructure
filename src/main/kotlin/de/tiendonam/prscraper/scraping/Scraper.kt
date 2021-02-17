@@ -1,7 +1,7 @@
 package de.tiendonam.prscraper.scraping
 
 import de.tiendonam.prscraper.database.*
-import de.tiendonam.prscraper.utils.CsvUtils
+import de.tiendonam.prscraper.utils.ExportRow
 import de.tiendonam.prscraper.utils.ExportUtils
 import de.tiendonam.prscraper.utils.RestClient
 import de.tiendonam.prscraper.utils.parseJSON
@@ -15,22 +15,22 @@ import javax.annotation.PostConstruct
 
 @Service
 class Scraper (
-        private val restClient: RestClient,
-        private val pullRequestRepo: PullRequestRepo,
-        private val commitRepo: CommitRepo,
-        private val commentRepo: CommentRepo,
-        private val commentStreamService: CommentStreamService,
-        private val gitFileRepo: GitFileRepo,
-        private val scrapingStatusRepo: ScrapingStatusRepo,
+    private val restClient: RestClient,
+    private val pullRequestRepo: PullRequestRepo,
+    private val commitRepo: CommitRepo,
+    private val commentRepo: CommentRepo,
+    private val commentStreamService: CommentStreamService,
+    private val gitFileRepo: GitFileRepo,
+    private val scrapingStatusRepo: ScrapingStatusRepo,
 
-        @Value("\${scraping.repository}")
-        private val repository: String,
+    @Value("\${scraping.repository}")
+    private val repository: String,
 
-        @Value("\${scraping.export.classified}")
-        private val exportClassified: Boolean,
+    @Value("\${scraping.export.classified}")
+    private val exportClassified: Boolean,
 
-        @Value("\${scraping.export.all}")
-        private val exportAll: Boolean
+    @Value("\${scraping.export.all}")
+    private val exportAll: Boolean
 ) {
 
     private val logger = LoggerFactory.getLogger(Scraper::class.java)
@@ -66,35 +66,36 @@ class Scraper (
         }
 
         if (exportClassified) {
-            logger.info("Writing classified results to csv...")
-            CsvUtils.writeFile("dataset_classified.csv") { printer ->
-                printer.printRecord("doc_id", "doc_text", "label", "note")
-                commentRepo
-                    .findByClassTopicNotNull()
-                    .forEach { comment ->
-                        if (ExportUtils.filter(comment.message))
-                            printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
-                    }
-            }
+            logger.info("Writing labeled results to csv...")
+
+            // fetch rows
+            val rows = commentRepo
+                .findByClassTopicNotNull()
+                .map { comment -> ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note) }
+
+            ExportUtils.exportCSV(rows, "dataset_labeled.csv", preprocessing = false)
+            ExportUtils.exportCSV(rows, "dataset_labeled_digested.csv", preprocessing = true)
             logger.info("Done.")
         }
 
         if (exportAll) {
             logger.info("Writing all results to csv...")
+
+            // fetch rows (one by one)
+            val rows = mutableListOf<ExportRow>()
             var counter = 0
-            CsvUtils.writeFile("dataset_all.csv") { printer ->
-                printer.printRecord("doc_id", "doc_text", "label", "note")
-                commentStreamService.doLineByLine { comment ->
+            commentStreamService.doLineByLine { comment ->
 
-                    counter++
-                    if (counter % 10000 == 0) {
-                        logger.info("All comments: $counter")
-                    }
-
-                    if (ExportUtils.filter(comment.message))
-                        printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
+                counter++
+                if (counter % 10000 == 0) {
+                    logger.info("Fetching all comments: $counter")
                 }
+
+                rows.add(ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note))
             }
+
+            ExportUtils.exportCSV(rows, "dataset.csv", preprocessing = false)
+            ExportUtils.exportCSV(rows, "dataset_digested.csv", preprocessing = true)
             logger.info("Done.")
         }
     }

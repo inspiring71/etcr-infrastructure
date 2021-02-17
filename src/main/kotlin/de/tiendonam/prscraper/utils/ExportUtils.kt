@@ -1,5 +1,7 @@
 package de.tiendonam.prscraper.utils
 
+data class ExportRow(val docId: Long, val docText: String, val label: String?, val note: String?)
+
 object ExportUtils {
 
     private val regexCodeBlock = Regex("```.*?```")
@@ -12,11 +14,23 @@ object ExportUtils {
     private val regexNumber = Regex(" [+-]?\\d+[.,]?\\d*")
     private val regexQuoted = Regex("\".*?\"")
 
+    fun exportCSV(data: List<ExportRow>, destination: String, preprocessing: Boolean = false) {
+        CsvUtils.writeFile(destination) { printer ->
+            printer.printRecord("doc_id", "doc_text", "label", "note")
+            data.forEach { row ->
+                if (!preprocessing || filter(row.docText)) {
+                    val text = if (preprocessing) preprocessComment(row.docText) else row.docText
+                    printer.printRecord(row.docId, text, row.label, row.note)
+                }
+            }
+        }
+    }
+
     /**
      * @param comment the comment to be preprocessed
      * @return the preprocessed comment
      */
-    fun normalizeComment(comment: String): String {
+    private fun preprocessComment(comment: String): String {
         return comment.trim()
             .replace(regexBreak, " ")
             .replace(regexCodeBlock, " [codeblock] ")
@@ -36,7 +50,7 @@ object ExportUtils {
      * @param comment the comment (raw) to be filtered
      * @return true if this comment should be included, false otherwise
      */
-    fun filter(comment: String): Boolean {
+    private fun filter(comment: String): Boolean {
         return !comment.startsWith("pinging", ignoreCase = true) // ignore ping command
                 && !comment.startsWith("jenkins", ignoreCase = true) // ignore jenkins command
                 && !comment.startsWith("@elasticmachine") // ignore elasticmachine command
