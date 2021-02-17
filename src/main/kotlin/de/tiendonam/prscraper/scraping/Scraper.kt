@@ -66,8 +66,9 @@ class Scraper (
         }
 
         if (exportClassified) {
-            // export classified comments
+            logger.info("Writing classified results to csv...")
             CsvUtils.writeFile("dataset_classified.csv") { printer ->
+                printer.printRecord("doc_id", "doc_text", "label", "note")
                 commentRepo
                     .findByClassTopicNotNull()
                     .forEach { comment ->
@@ -75,13 +76,14 @@ class Scraper (
                             printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
                     }
             }
-            logger.info("Written classified results to csv.")
+            logger.info("Done.")
         }
 
         if (exportAll) {
-            // export all comments
+            logger.info("Writing all results to csv...")
             var counter = 0
             CsvUtils.writeFile("dataset_all.csv") { printer ->
+                printer.printRecord("doc_id", "doc_text", "label", "note")
                 commentStreamService.doLineByLine { comment ->
 
                     counter++
@@ -93,10 +95,8 @@ class Scraper (
                         printer.printRecord(comment.id, ExportUtils.normalizeComment(comment.message), comment.classTopic, comment.note)
                 }
             }
-            logger.info("Written all results to csv.")
+            logger.info("Done.")
         }
-
-        logger.info("Done.")
     }
 
     /**
