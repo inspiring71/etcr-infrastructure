@@ -71,7 +71,7 @@ class Scraper (
             // fetch rows
             val rows = commentRepo
                 .findByClassTopicNotNull()
-                .map { comment -> ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note) }
+                .map { comment -> ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note, comment.author == comment.pullRequest.author) }
 
             ExportUtils.exportCSV(rows, "dataset_labeled.csv", preprocessing = false)
             ExportUtils.exportCSV(rows, "dataset_labeled_digested.csv", preprocessing = true)
@@ -91,7 +91,7 @@ class Scraper (
                     logger.info("Fetching all comments: $counter")
                 }
 
-                rows.add(ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note))
+                rows.add(ExportRow(comment.id, comment.message, comment.classTopic?.name, comment.note, comment.author == comment.pullRequest.author))
             }
 
             ExportUtils.exportCSV(rows, "dataset.csv", preprocessing = false)
