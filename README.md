@@ -1,5 +1,5 @@
 # Github PR Scraper
-Get useful information about pull requests of a repository
+Get useful information about pull requests of a repository. Forked from Tienisto/pr-scraper.
 
 ## Getting Started
 
