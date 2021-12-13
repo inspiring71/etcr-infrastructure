@@ -40,3 +40,11 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### config files ###
+*.properties
+
+atoken
+
+### logs ###
+logs*
