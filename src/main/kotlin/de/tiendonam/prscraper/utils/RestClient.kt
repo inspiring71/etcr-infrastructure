@@ -31,6 +31,8 @@ class RestClient (
         val resetAt = responseEntity.headers["X-RateLimit-Reset"]?.firstOrNull()?.toLongOrNull()
         if (remaining != null) {
             logger.info("X-RateLimit-Remaining: $remaining")
+            if (remaining.toLong() < 60)
+                Thread.sleep(120000);
         }
         if (resetAt != null) {
             val remainingTime = resetAt - Instant.now().epochSecond

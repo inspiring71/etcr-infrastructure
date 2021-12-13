@@ -108,22 +108,38 @@ class Scraper (
         pullRequestRepo.deleteAll()
         var page = 1
         while (true) {
-            val githubResponse = restClient
-                .get("https://api.github.com/repos/$repository/pulls?state=all&sort=created&per_page=100&page=$page&direction=$direction")
-                ?.parseJSON<List<PullRequestDto>>()
-                ?: throw RuntimeException("Missing body in GET response. (fetching pulls)")
-
+            val githubResponse :List<PullRequestDto>;
+            try {
+                githubResponse = restClient
+                    .get("https://api.github.com/repos/$repository/pulls?state=all&sort=created&per_page=100&page=$page&direction=$direction")
+                    ?.parseJSON<List<PullRequestDto>>()
+                    ?: throw RuntimeException("Missing body in GET response. (fetching pulls)")
+            } catch (e: Exception) {
+                logger.info("Error at fetching PRs.")
+                page++;
+                if (page == 10000)
+                    break;
+                continue;
+            }
             if (githubResponse.isEmpty())
                 break // reached last page
-
-            val prParsed = githubResponse.map { dto ->
-                PullRequest(
-                    ghNumber = dto.number,
-                    title = dto.title,
-                    state = dto.state,
-                    author = dto.user.login ?: "",
-                    createdAt = OffsetDateTime.parse(dto.created_at)
-                )
+            val prParsed :List<PullRequest>;
+            try {
+                prParsed = githubResponse.map { dto ->
+                    PullRequest(
+                        ghNumber = dto.number,
+                        title = dto.title,
+                        state = dto.state,
+                        author = dto.user.login ?: "",
+                        createdAt = OffsetDateTime.parse(dto.created_at)
+                    )
+                }
+            } catch (e: Exception) {
+                logger.info("Error at parsing PRs.")
+                page++;
+                if (page == 10000)
+                    break;
+                continue;
             }
 
             pullRequestRepo.saveAll(prParsed) // save to database
@@ -142,11 +158,19 @@ class Scraper (
             val commitsDto = mutableListOf<CommitDto>()
             var page = 1
             while (true) {
-                val githubResponse = restClient
-                    .get("https://api.github.com/repos/$repository/pulls/${pullRequest.ghNumber}/commits?per_page=100&page=$page")
-                    ?.parseJSON<List<CommitDto>>()
-                    ?: throw RuntimeException("Missing body in GET response. (fetching commits)")
-
+                val githubResponse :List<CommitDto>;
+                try {
+                    githubResponse = restClient
+                        .get("https://api.github.com/repos/$repository/pulls/${pullRequest.ghNumber}/commits?per_page=100&page=$page")
+                        ?.parseJSON<List<CommitDto>>()
+                        ?: throw RuntimeException("Missing body in GET response. (fetching commits)")
+                } catch (e: Exception) {
+                    logger.info("Error at fetching Commits.")
+                    page++;
+                    if (page == 10000)
+                        break;
+                    continue;
+                }
                 if (githubResponse.isEmpty())
                     break // reached page after last page
 
@@ -156,22 +180,31 @@ class Scraper (
                 if (githubResponse.size < 100)
                     break // reached last page
             }
-
-            val commitsParsed = commitsDto.map { dto ->
-                Commit(
-                    message = dto.commit.message,
-                    pullRequest = pullRequest,
-                    hash = dto.sha,
-                    hashParent = dto.parents.firstOrNull()?.sha,
-                    tree = dto.commit.tree.sha,
-                    author = dto.author?.login ?: dto.commit.author.name,
-                    createdAt = OffsetDateTime.parse(dto.commit.author.date)
-                )
+            var add :Boolean;
+            var commitsParsed :List<Commit>;
+            try {
+                commitsParsed = commitsDto.map { dto ->
+                    Commit(
+                        message = dto.commit.message,
+                        pullRequest = pullRequest,
+                        hash = dto.sha,
+                        hashParent = dto.parents.firstOrNull()?.sha,
+                        tree = dto.commit.tree.sha,
+                        author = dto.author?.login ?: dto.commit.author.name,
+                        createdAt = OffsetDateTime.parse(dto.commit.author.date)
+                    )
+                }
+                add = true;
+            } catch (e: Exception) {
+                logger.info("Error at parsing Commits.")
+                commitsParsed = emptyList();
+                add = false;
             }
-
-            commitRepo.saveAll(commitsParsed)
-            logger.info("Fetched ${commitsParsed.size} commits from PR #${pullRequest.ghNumber} (${index + 1} / ${pullRequests.size})")
-            Thread.sleep(900)
+            if (add) {
+                commitRepo.saveAll(commitsParsed)
+                logger.info("Fetched ${commitsParsed.size} commits from PR #${pullRequest.ghNumber} (${index + 1} / ${pullRequests.size})")
+            }
+            Thread.sleep(500);
         }
     }
 
@@ -186,11 +219,19 @@ class Scraper (
             val commentsDtoB = mutableListOf<CommentDto>()
             var page = 1
             while (true) {
-                val githubResponse = restClient
-                    .get("https://api.github.com/repos/$repository/pulls/${pullRequest.ghNumber}/comments?per_page=100&page=$page")
-                    ?.parseJSON<List<CommentDto>>()
-                    ?: throw RuntimeException("Missing body in GET response. (fetching comments via pull api)")
-
+                val githubResponse :List<CommentDto>;
+                try {
+                    githubResponse = restClient
+                        .get("https://api.github.com/repos/$repository/pulls/${pullRequest.ghNumber}/comments?per_page=100&page=$page")
+                        ?.parseJSON<List<CommentDto>>()
+                        ?: throw RuntimeException("Missing body in GET response. (fetching comments via pull api)")
+                } catch (e: Exception) {
+                    logger.info("Error at fetching Comments.")
+                    page++;
+                    if (page == 10000)
+                        break;
+                    continue;
+                }
                 if (githubResponse.isEmpty())
                     break // reached page after last page
 
@@ -201,15 +242,23 @@ class Scraper (
                     break // reached last page
             }
 
-            Thread.sleep(600)
+            Thread.sleep(300)
 
             page = 1
             while (true) {
-                val githubResponse = restClient
-                    .get("https://api.github.com/repos/$repository/issues/${pullRequest.ghNumber}/comments?per_page=100&page=$page")
-                    ?.parseJSON<List<CommentDto>>()
-                    ?: throw RuntimeException("Missing body in GET response. (fetching comments via issue api)")
-
+                val githubResponse :List<CommentDto>;
+                try {
+                    githubResponse = restClient
+                        .get("https://api.github.com/repos/$repository/issues/${pullRequest.ghNumber}/comments?per_page=100&page=$page")
+                        ?.parseJSON<List<CommentDto>>()
+                        ?: throw RuntimeException("Missing body in GET response. (fetching comments via issue api)")
+                } catch (e: Exception) {
+                    logger.info("Error at parsing Comments.")
+                    page++;
+                    if (page == 10000)
+                        break;
+                    continue;
+                }
                 if (githubResponse.isEmpty())
                     break // reached page after last page
 
@@ -220,28 +269,38 @@ class Scraper (
                     break // reached last page
             }
 
-            val commentsDto = commentsDtoA + commentsDtoB
-            val commentsParsed = commentsDto.map { dto ->
-                val commit = if (dto.original_commit_id != null) commitRepo.findByHashAndPullRequest(dto.original_commit_id, pullRequest) else null
-                val commitFallback = if (dto.commit_id != null) commitRepo.findByHashAndPullRequest(dto.commit_id, pullRequest) else null
+            val commentsDto = commentsDtoA + commentsDtoB;
+            var commentsParsed :List<Comment>;
+            var add :Boolean;
+            try {
+                commentsParsed = commentsDto.map { dto ->
+                    val commit = if (dto.original_commit_id != null) commitRepo.findByHashAndPullRequest(dto.original_commit_id, pullRequest) else null
+                    val commitFallback = if (dto.commit_id != null) commitRepo.findByHashAndPullRequest(dto.commit_id, pullRequest) else null
 
-                Comment(
-                    message = dto.body,
-                    ghId = dto.id,
-                    ghReplyId = dto.in_reply_to_id,
-                    pullRequest = pullRequest,
-                    commit = commit?.firstOrNull(),
-                    commitFallback = commitFallback?.firstOrNull(),
-                    hunkDiff = dto.diff_hunk,
-                    hunkFile = dto.path,
-                    author = dto.user.login ?: "",
-                    createdAt = OffsetDateTime.parse(dto.created_at)
-                )
-            }.sortedBy { comment -> comment.createdAt }
-
-            commentRepo.saveAll(commentsParsed)
-            logger.info("Fetched ${commentsParsed.size} comments from PR #${pullRequest.ghNumber} (${index + 1} / ${pullRequests.size})")
-            Thread.sleep(900)
+                    Comment(
+                        message = dto.body,
+                        ghId = dto.id,
+                        ghReplyId = dto.in_reply_to_id,
+                        pullRequest = pullRequest,
+                        commit = commit?.firstOrNull(),
+                        commitFallback = commitFallback?.firstOrNull(),
+                        hunkDiff = dto.diff_hunk,
+                        hunkFile = dto.path,
+                        author = dto.user.login ?: "",
+                        createdAt = OffsetDateTime.parse(dto.created_at)
+                    )
+                }.sortedBy { comment -> comment.createdAt }
+                add = true;
+            } catch (e: Exception) {
+                logger.info("Error at parsing Comments.")
+                commentsParsed = emptyList();
+                add = false;
+            }
+            if (add) {
+                commentRepo.saveAll(commentsParsed)
+                logger.info("Fetched ${commentsParsed.size} comments from PR #${pullRequest.ghNumber} (${index + 1} / ${pullRequests.size})")
+            }
+            Thread.sleep(500)
         }
     }
 
@@ -266,7 +325,7 @@ class Scraper (
                 val url = "https://raw.githubusercontent.com/$repository/${commit.hash}/$path"
                 try {
                     val content = restClient.get(url)!!
-                    Thread.sleep(500)
+                    // Thread.sleep(500)
                     GitFile(commit = commit, filePath = path, fileContent = content)
                 } catch (e: Exception) {
                     // this is possible e.g. the file has been deleted
