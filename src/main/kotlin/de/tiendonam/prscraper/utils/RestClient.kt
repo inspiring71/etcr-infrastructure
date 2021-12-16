@@ -42,7 +42,10 @@ class RestClient (
             val secString = sec.toString().padStart(2, '0')
             logger.info("X-RateLimit-Reset: in $minString:$secString")
         }
-        return responseEntity.body
+        var output = responseEntity.body;
+        if (output != null)
+            output = output.replace("\u0000", "");
+        return output
     }
 
     fun post(url: String, json: String = ""): String? {
