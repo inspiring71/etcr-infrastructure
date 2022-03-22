@@ -1936,5 +1936,10 @@ do
     gzip $outp/${repo/\//-}.tar 
 done
 
-# gunzip db.tar.gz
-# pg_restore --dbname=db --no-owner --verbose db.tar
+# unzip dbs.zip
+# for repo in "${repos[@]}"
+# do
+#     echo "load $repo."
+#     gunzip $repo.tar.gz
+#     pg_restore --dbname=$repo --no-owner --verbose $repo.tar
+# done

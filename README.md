@@ -40,6 +40,21 @@ If you want to modify the code of the scraper, you can fork the repo and make yo
 ```
 New `jar` package will be created in `build/libs` directory.
 
+
+## Saved Data
+The crawled database is dumped and compressed into a zip file. (will be uploaded later.)
+To load our database, install psql (PostgreSQL) 14.1.
+
+Follow `dumpdbs.sh` to dump and load database.
+
+Reference:
+```
+Dump: https://www.postgresqltutorial.com/postgresql-backup-database/
+Load: https://www.postgresqltutorial.com/postgresql-restore-database/
+```
+
+
+
 ## Database Schema
 The schema will be generated automatically for you.
 
@@ -104,13 +119,3 @@ Possible entries for **scraping_status**:
 key|value|description
 ---|---|---
 STAGE|`PULL_REQUESTS`, `COMMITS`, `COMMENTS`, `FILES`, `DONE`|the server will pickup the stage value and start at that stage
-
-
-
-
-## PGSQL Doc
-
-Dump: https://www.postgresqltutorial.com/postgresql-backup-database/
-Load: https://www.postgresqltutorial.com/postgresql-restore-database/
-
-psql (PostgreSQL) 14.1 (Ubuntu 14.1-1.pgdg18.04+1)
