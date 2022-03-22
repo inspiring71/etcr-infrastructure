@@ -47,8 +47,9 @@ out/
 atoken
 
 ### logs ###
-logs*
+*logs*
 
 ### tmpfiles ###
 tmp*
 nohup*
+crawl*.sh

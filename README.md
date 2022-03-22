@@ -1,31 +1,44 @@
 # Github PR Scraper
 
-Forked from rheum/etcr-infrastructure.
+The repo is built based on the *etcr-infrastructure*, a web crawler for collecting github pull request data. (forked from [rheum/etcr-infrastructure](https://github.com/rheum/etcr-infrastructure)).
 
-I'm fixing some potential bugs and doing something interesting :wink:.
+I've made some small changes to make etcr run stably and faster.
+* Fixed: add try/except statement to keep the scraper from crashing.
+* Fixed: Shorten the sleep time. Sleep when the remaining request number is less than 60.
+* Added: add script to crawl lots of repos with one execution.
+* <span style="color:red">Unfixed bug</span>: PSQL error when meeting *0x00* in crawled text. The crawler will fail in such cases.
+I thought [this](https://stackoverflow.com/questions/1347646/postgres-error-on-insert-error-invalid-byte-sequence-for-encoding-utf8-0x0) is a solution. However, it seems my fix (which can be seen from the git commit history) does not work.
+```
+o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 22021
+o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: invalid byte sequence for encoding "UTF8": 0x00
+...
+Caused by: org.postgresql.util.PSQLException: ERROR: invalid byte sequence for encoding "UTF8": 0x00
+```
+
 
 ## Getting Started
+### Install Postgres
+ETCR crawl Pull Request (PR) data and store them in a Postgres database. So you need build the [Postgres](https://www.postgresql.org/download/) environment first.
 
-Using JAR:
-1. Add `application.properties` file next to the jar:
+### Collect Repos
+Collect reposiroty names to crawl. Refer to [TopRepos](https://github.com/Lizhmq/TopRepos).
+
+### Run the Scraper
+Write repository names in createdbs.sh and execute:
 ```
-# scraping config
-scraping.repository=elastic/elasticsearch
-scraping.auth=token e8c931efc42c74c2e4e027a2a82cc2cf2a58246b
-
-# database config
-spring.datasource.url=jdbc:postgresql://localhost:5432/pr
-spring.datasource.username=myuser
-spring.datasource.password=123456
+bash createdbs.sh
+bash crawl.sh
 ```
 
-2. Run JAR:
+Remember to change the *PASSWORD* in createdbs.sh to your own psql password and to fill in the *userr*, [*token*](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token), and *repos* in crawl.sh.
 
-`java -jar prscraper-1.0.0.jar`
 
-With custom path to properties file:
-
-`java -jar prscraper-1.0.0.jar --spring.config.location=<path to application.properties>`
+## Update Scrapper
+If you want to modify the code of the scraper, you can fork the repo and make your changes. Change the source code in `src` directory and run build again.
+```
+./gradle build
+```
+New `jar` package will be created in `build/libs` directory.
 
 ## Database Schema
 The schema will be generated automatically for you.
@@ -91,3 +104,13 @@ Possible entries for **scraping_status**:
 key|value|description
 ---|---|---
 STAGE|`PULL_REQUESTS`, `COMMITS`, `COMMENTS`, `FILES`, `DONE`|the server will pickup the stage value and start at that stage
+
+
+
+
+## PGSQL Doc
+
+Dump: https://www.postgresqltutorial.com/postgresql-backup-database/
+Load: https://www.postgresqltutorial.com/postgresql-restore-database/
+
+psql (PostgreSQL) 14.1 (Ubuntu 14.1-1.pgdg18.04+1)
