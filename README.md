@@ -58,6 +58,8 @@ Load: https://www.postgresqltutorial.com/postgresql-restore-database/
 ## Database Schema
 The schema will be generated automatically for you.
 
+<img src="db.jpg" width="90%" />
+
 **pull_request**
 
 column|type|nullable|description
