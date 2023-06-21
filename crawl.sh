@@ -10,7 +10,7 @@ propfile=$userr.properties
 # )
 set -f                      # avoid globbing (expansion of *).
 repos=(${repositories//,/ })
-# repos = ',' read -ra ARRAY <<< "$repositories"
+# = ',' read -ra ARRAY <<< "$repositories"
 
 mkdir $logdir/$userr
 for repo in "${repos[@]}"

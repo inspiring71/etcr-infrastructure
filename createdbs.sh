@@ -3,7 +3,8 @@
 # repos=(
 # oracle/graal
 # )
-repos = ',' read -ra ARRAY <<< "$repositories"
+set -f                      # avoid globbing (expansion of *).
+repos=(${repositories//,/ })
 
 
 for repo in "${repos[@]}"
