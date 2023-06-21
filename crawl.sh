@@ -1,3 +1,5 @@
+#!/bin/bash
+
 userr=rebels
 # token=$token
 logdir=logs
