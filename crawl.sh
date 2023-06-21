@@ -15,11 +15,12 @@ repos=(${repositories//,/ })
 mkdir $logdir/$userr
 for repo in "${repos[@]}"
 do
-    echo "spring.main.web-application-type=none\n\n# scraping config" > $propfile
+    echo "spring.main.web-application-type=none" > $propfile
     echo "scraping.repository=$repo" >> $propfile
     echo "scraping.auth=token $token" >> $propfile
-    echo "scraping.export.all=false\nscraping.export.classified=false" >> $propfile
-    echo "# database config\nspring.jpa.hibernate.ddl-auto=update" >> $propfile
+    echo "scraping.export.all=false" >> $propfile
+    echo "scraping.export.classified=false" >> $propfile
+    echo "spring.jpa.hibernate.ddl-auto=update" >> $propfile
     echo "spring.datasource.url=jdbc:postgresql://$db_host:$db_port/$repo" >> $propfile
     echo "spring.datasource.username=$db_user">> $propfile
     echo "spring.datasource.password=$db_pass" >> $propfile
